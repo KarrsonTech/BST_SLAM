@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\hkarr\Documents\GitHub\BST_SLAM\SLAM-Source\App.cpp">
+      <Filter>SLAM-Source</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\hkarr\Documents\GitHub\BST_SLAM\SLAM-Source\OAK_D.cpp">
+      <Filter>SLAM-Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\hkarr\Documents\GitHub\BST_SLAM\SLAM-Source\OAK_D.hpp">
+      <Filter>SLAM-Source</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\hkarr\Documents\GitHub\BST_SLAM\SLAM-Source\Odometry.hpp">
+      <Filter>SLAM-Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\hkarr\Documents\GitHub\BST_SLAM\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="C:\Program Files\depthai\lib\cmake\depthai\dependencies\nlohmann_json.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SLAM-Source">
+      <UniqueIdentifier>{B2F8B741-E015-3ED7-9692-6CF383D5F7F1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

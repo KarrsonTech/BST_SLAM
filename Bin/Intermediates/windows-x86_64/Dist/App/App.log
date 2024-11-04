@@ -1,0 +1,77 @@
+﻿  App.cpp
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Vendor\DepthAI\include\depthai-shared\properties\SyncProperties.hpp(14,32): warning C4244: 'initializing': conversion from 'double' to 'uint64_t', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(36,59): warning C4244: 'argument': conversion from 'const double' to 'int', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,73): warning C4244: 'argument': conversion from 'const double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,73): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,73): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,73): warning C4244:             _Tp=int
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,73): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,62): warning C4244: 'argument': conversion from 'const double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,62): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,62): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,62): warning C4244:             _Tp=int
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(41,62): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,75): warning C4244: 'argument': conversion from 'const double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,75): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,75): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,75): warning C4244:             _Tp=int
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,75): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,64): warning C4244: 'argument': conversion from 'const double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,64): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,64): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,64): warning C4244:             _Tp=int
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(42,64): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(83,38): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:             _Tp=double
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:         ]
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:         and
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,75): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:             _Tp=double
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:         ]
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:         and
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,41): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:             _Tp=double
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:         ]
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:         and
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Lib\Source\BST_SLAM\BST_SLAM.hpp(150,38): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+  OAK_D.cpp
+C:\Users\hkarr\Documents\GitHub\BST_SLAM\Vendor\DepthAI\include\depthai-shared\properties\SyncProperties.hpp(14,32): warning C4244: 'initializing': conversion from 'double' to 'uint64_t', possible loss of data
+  (compiling source file 'Source/OAK_D.cpp')
+  
+  Generating Code...
+  App.vcxproj -> C:\Users\hkarr\Documents\GitHub\BST_SLAM\Bin\windows-x86_64\Dist\App\App.exe

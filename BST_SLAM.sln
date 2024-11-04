@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "App", "App\App.vcxproj", "{46D6870B-B2DF-877C-3B5B-9E7CA763937C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BST_SLAM", "Lib\BST_SLAM.vcxproj", "{BA1AA524-A6E7-FF2F-CF00-EED7BB2C35BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Dist|x64 = Dist|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{46D6870B-B2DF-877C-3B5B-9E7CA763937C}.Dist|x64.ActiveCfg = Dist|x64
+		{46D6870B-B2DF-877C-3B5B-9E7CA763937C}.Dist|x64.Build.0 = Dist|x64
+		{BA1AA524-A6E7-FF2F-CF00-EED7BB2C35BE}.Dist|x64.ActiveCfg = Dist|x64
+		{BA1AA524-A6E7-FF2F-CF00-EED7BB2C35BE}.Dist|x64.Build.0 = Dist|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

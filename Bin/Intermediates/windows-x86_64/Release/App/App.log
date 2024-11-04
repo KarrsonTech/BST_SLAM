@@ -1,0 +1,84 @@
+﻿  App.cpp
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Vendor\DepthAI\include\depthai-shared\properties\SyncProperties.hpp(14,32): warning C4244: 'initializing': conversion from 'double' to 'uint64_t', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(77,68): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(77,68): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(77,68): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(77,68): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(77,68): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(76,68): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(76,68): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(76,68): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(76,68): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(76,68): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(81,71): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(81,71): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(81,71): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(81,71): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(81,71): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(80,71): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(80,71): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(80,71): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(80,71): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(80,71): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(95,31): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(106,34): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:             _Tp=double
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:         ]
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:         and
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,73): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:             _Tp=double
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:         ]
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:         and
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,43): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244: 'argument': conversion from '_Tp' to '_Tp', possible loss of data
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:         with
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:             _Tp=double
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:         ]
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:         and
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:         [
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:             _Tp=float
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_VIO.hpp(187,40): warning C4244:         ]
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_SLAM.hpp(53,30): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_SLAM.hpp(58,31): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_SLAM.hpp(60,32): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Lib\Source\BST_SLAM\BST_SLAM.hpp(82,39): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source/App.cpp')
+  
+  App.vcxproj -> C:\Users\hkarr\Documents\GitHub\BST_SLAM_DEV\Bin\windows-x86_64\Release\App\App.exe

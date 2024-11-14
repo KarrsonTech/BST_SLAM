@@ -18,7 +18,7 @@ int main() {
 		float fy = frame.fy;
 		cv::Mat Left = frame.left;
 		cv::Mat Right = frame.right;
-		float Baseline = frame.baseline;
+		float Baseline = frame.baseline; // MUST BE IN CENTIMETERS!
 		if (TEST_MODE == TEST_MODE_CHECK_INPUT_DATA) {
 			CheckSubscriber(R, fx, fy, Left, Right);
 			cv::waitKey(1);

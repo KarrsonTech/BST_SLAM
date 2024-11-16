@@ -37,9 +37,9 @@ Vec3f Tracker(Mat R, float fx, float fy, Mat Left, Mat Right, float Baseline) {
 	fx *= fxy;
 	fy *= fxy;
 	Mat A = CameraMatrix(fx, fy, Left.size());
-	warpPerspective(PrevLeft, PrevLeft, (A * (R * PrevR.inv()) * A.inv()).inv(), Left.size());
-	warpPerspective(PrevRight, PrevRight, (A * (R * PrevR.inv()) * A.inv()).inv(), Left.size());
-	CvStitcher->setPanoConfidenceThresh(0);
+	warpPerspective(PrevLeft, PrevLeft, (A * (PrevR.inv() * R).inv() * A.inv()), Left.size());
+	warpPerspective(PrevRight, PrevRight, (A * (PrevR.inv() * R).inv() * A.inv()), Left.size());
+	CvStitcher->setPanoConfidenceThresh(0.98);
 	try { CvStitcher->estimateTransform(vector{ PrevLeft, Left }); } catch (...) { ; }
 	if (CvStitcher->cameras().size() == 2) {
 		Mat T2 = CvStitcher->cameras()[1].R * CvStitcher->cameras()[0].R.inv();
@@ -52,14 +52,17 @@ Vec3f Tracker(Mat R, float fx, float fy, Mat Left, Mat Right, float Baseline) {
 		float Depth = Baseline * A.at<float>(0, 0) / (Disp.at<float>(Left.rows / 2.0, Left.cols / 2.0) / 16.0);
 		float S = 100;
 		vector<Point3f> _3D{
-			Point3f(-S, -S, Depth), Point3f(+1, -1, Depth),
-			Point3f(-S, +S, Depth), Point3f(+1, +1, Depth)
+			Point3f(-S, -S, Depth), Point3f(+S, -S, Depth),
+			Point3f(+S, +S, Depth), Point3f(-S, +S, Depth)
 		};
 		vector<Point2f> _2D;
 		projectPoints(_3D, Vec3f(), Vec3f(), A, noArray(), _2D);
+		Vec3f _, Origin;
+		solvePnP(_3D, _2D, A, noArray(), _, Origin, false, SOLVEPNP_AP3P);
 		perspectiveTransform(_2D, _2D, T2);
-		Vec3f _, T;
+		Vec3f T;
 		solvePnP(_3D, _2D, A, noArray(), _, T, false, SOLVEPNP_AP3P);
+		T -= Origin;
 		T[0] *= -1;
 		T[2] *= -1;
 		T = (Mat)(R * T);

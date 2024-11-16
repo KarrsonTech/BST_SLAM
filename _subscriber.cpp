@@ -3,7 +3,7 @@
 #define TEST_MODE_CHECK_INPUT_DATA	'I'	// START HERE
 #define TEST_MODE_CHECK_OUTPUT_DATA	'O'	// END HERE
 // SELECT BELOW
-#define TEST_MODE TEST_MODE_CHECK_INPUT_DATA
+#define TEST_MODE TEST_MODE_CHECK_OUTPUT_DATA
 
 void CheckSubscriber(cv::Mat R, float fx, float fy, cv::Mat Left, cv::Mat Right);
 cv::Vec3f Tracker(cv::Mat R, float fx, float fy, cv::Mat Left, cv::Mat Right, float Baseline);

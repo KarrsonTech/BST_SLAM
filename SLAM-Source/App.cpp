@@ -14,7 +14,7 @@ int main()
 
         // Process
         static cv::Vec3f Pos;
-        Pos += VIO.EstimateTranslation(Frame.Left, Frame.Rotation);
+        Pos += VIO.EstimateTranslation(Frame.Left, Frame.Right, Frame.StereoBaselineDistance, Frame.Rotation);
         cv::Vec4f Rot = VIO.QuaternionFromRotation(Frame.Rotation);
 
         // Output

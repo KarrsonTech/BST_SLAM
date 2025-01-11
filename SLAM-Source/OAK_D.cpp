@@ -19,7 +19,7 @@ SensorFrame OAK_D::ReadSensorFrame()
     auto IMU = ImuQueue->get<dai::IMUData>();
     Frame.Rotation = ReadRotation(IMU);
     Frame.Acceleration = ReadAcceleration(IMU);
-    Frame.StereoBaselineDistance = CalibrationHandler.getBaselineDistance();
+    Frame.StereoBaselineDistance = CalibrationHandler.getBaselineDistance() * 0.01;
     Frame.fx = fx;
     Frame.fy = fy;
     return Frame;

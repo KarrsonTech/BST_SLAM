@@ -1,2 +1,2 @@
-cmake -S . -B SLAM-Projects
+cmake -S . -B BST_SLAM-Projects
 pause

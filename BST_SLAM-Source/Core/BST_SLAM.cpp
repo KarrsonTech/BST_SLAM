@@ -39,6 +39,7 @@ int main() {
         K.at<float>(1, 2) = sz.height / 2.0f;
 
         cv::Vec3f RelTPose = Solver->SolveISO3(PrevLeft, PrevRight, PrevRot, InputData.Left, InputData.Right, InputData.Rot, K, InputData.Baseline, RelTPoseMax);
+        sz = InputData.Left.size();
         CamPos += RelTPose;
 
         if (MapNodes.empty() || cv::norm(MapNodes.back().Pos - CamPos) >= NodeDist) 
@@ -64,6 +65,25 @@ int main() {
         cv::Vec4f CamRot(-Q.x, Q.y, -Q.z, -Q.w);
 
         BST_SLAM::SendMessage(CamPos, CamRot);
+
+        cv::Mat DisparityMap;
+        {
+            cv::Size TempSz = InputData.Left.size();
+            cv::resize(InputData.Left, InputData.Left, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
+            cv::resize(InputData.Right, InputData.Right, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
+            static cv::Ptr<cv::StereoSGBM> DefaultDepthEstimator = cv::StereoSGBM::create(0, 64, 11);
+            DefaultDepthEstimator->setMode(cv::StereoSGBM::MODE_HH4);
+            DefaultDepthEstimator->compute(InputData.Left, InputData.Right, DisparityMap);
+            cv::resize(InputData.Left, InputData.Left, TempSz, 0, 0, cv::INTER_AREA);
+            cv::resize(InputData.Right, InputData.Right, TempSz, 0, 0, cv::INTER_AREA);
+            cv::resize(DisparityMap, DisparityMap, TempSz, 0, 0, cv::INTER_AREA);
+        }
+
+        cv::Mat Vis = DisparityMap;
+        cv::normalize(Vis, Vis, 0, 255, cv::NormTypes::NORM_MINMAX);
+        Vis.convertTo(Vis, CV_8U);
+        cv::imshow("Vis", Vis);
+        cv::waitKey(1);
 
         InputData.Left.copyTo(PrevLeft);
         InputData.Right.copyTo(PrevRight);

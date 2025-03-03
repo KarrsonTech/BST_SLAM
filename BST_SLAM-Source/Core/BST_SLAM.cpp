@@ -1,6 +1,7 @@
 #include "../User/SensorDriver.hpp"
 #include "BST_SLAM/Solver.hpp"
 #include "BST_SLAM/Messaging.hpp"
+#include <opencv2/ximgproc.hpp>
 
 float RelTPoseMax = 0.1f;
 float NodeDist = 0.02f;
@@ -68,19 +69,48 @@ int main() {
 
         cv::Mat DisparityMap;
         {
-            cv::Size TempSz = InputData.Left.size();
-            cv::resize(InputData.Left, InputData.Left, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
-            cv::resize(InputData.Right, InputData.Right, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
-            static cv::Ptr<cv::StereoSGBM> DefaultDepthEstimator = cv::StereoSGBM::create(0, 64, 11);
-            DefaultDepthEstimator->setMode(cv::StereoSGBM::MODE_HH4);
-            DefaultDepthEstimator->compute(InputData.Left, InputData.Right, DisparityMap);
-            cv::resize(InputData.Left, InputData.Left, TempSz, 0, 0, cv::INTER_AREA);
-            cv::resize(InputData.Right, InputData.Right, TempSz, 0, 0, cv::INTER_AREA);
-            cv::resize(DisparityMap, DisparityMap, TempSz, 0, 0, cv::INTER_AREA);
+            cv::Mat LeftImgIn = InputData.Left.clone();
+            cv::Mat RightImgIn = InputData.Right.clone();
+            {
+                cv::Mat LeftImgCopy = LeftImgIn.clone();
+                cv::Mat RightImgCopy = RightImgIn.clone();
+                cv::Ptr<cv::ximgproc::AdaptiveManifoldFilter> AdaptiveManifoldFilter = cv::ximgproc::createAMFilter(3, 0.7);
+                cv::pyrDown(LeftImgIn, LeftImgIn);
+                cv::pyrDown(RightImgIn, RightImgIn);
+                AdaptiveManifoldFilter->filter(LeftImgIn, LeftImgIn);
+                AdaptiveManifoldFilter->filter(RightImgIn, RightImgIn);
+                cv::pyrUp(LeftImgIn, LeftImgIn);
+                cv::pyrUp(RightImgIn, RightImgIn);
+                cv::Mat LeftDisparityMap;
+                cv::Mat RightDisparityMap;
+                cv::Size TempSz = LeftImgIn.size();
+                cv::resize(LeftImgIn, LeftImgIn, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
+                cv::resize(RightImgIn, RightImgIn, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
+                cv::Ptr<cv::StereoSGBM> StereoSGBM = cv::StereoSGBM::create();
+                StereoSGBM->setMode(cv::StereoSGBM::MODE_HH4);
+                StereoSGBM->compute(LeftImgIn, RightImgIn, LeftDisparityMap);
+                StereoSGBM->compute(RightImgIn, LeftImgIn, RightDisparityMap);
+                cv::Ptr<cv::ximgproc::DisparityWLSFilter> DisparityWLSFilter = cv::ximgproc::createDisparityWLSFilter(StereoSGBM);
+                DisparityWLSFilter->setLRCthresh(255);
+                DisparityWLSFilter->setLambda(24480);
+                DisparityWLSFilter->filter(LeftDisparityMap, LeftImgIn, DisparityMap, RightDisparityMap, cv::Rect(), RightImgIn);
+                cv::resize(DisparityMap, DisparityMap, TempSz, 0, 0, cv::INTER_AREA);
+                LeftImgIn = LeftImgCopy.clone();
+                RightImgIn = RightImgCopy.clone();
+                int T = DisparityMap.type();
+                DisparityMap.convertTo(DisparityMap, CV_8U);
+                DisparityMap = 255 - DisparityMap;
+                DisparityMap.convertTo(DisparityMap, CV_64F);
+                DisparityMap.convertTo(DisparityMap, T);
+                DisparityMap.convertTo(DisparityMap, CV_64F);
+                DisparityMap = (DisparityMap / 255.0) * (double)LeftImgIn.size().width;
+                DisparityMap.convertTo(DisparityMap, T);
+            }
         }
 
-        cv::Mat Vis = DisparityMap;
-        cv::normalize(Vis, Vis, 0, 255, cv::NormTypes::NORM_MINMAX);
+        cv::Mat Vis = DisparityMap.clone();
+        Vis.convertTo(Vis, CV_64F);
+        Vis = (Vis / (double)InputData.Left.size().width) * 255.0;
         Vis.convertTo(Vis, CV_8U);
         cv::imshow("Vis", Vis);
         cv::waitKey(1);

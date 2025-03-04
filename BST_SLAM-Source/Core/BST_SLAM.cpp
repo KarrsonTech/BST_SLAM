@@ -70,8 +70,9 @@ public:
             cv::Vec3f color(255 * (1 - occupancy), 255 * occupancy, 0);
 
             cv::Vec3f voxel_center = voxelToWorld(key);
-            cv::viz::WCube voxel(cv::Point3f(voxel_center - cv::Vec3f(voxel_size_ / 2)),
-                cv::Point3f(voxel_center + cv::Vec3f(voxel_size_ / 2)), true, cv::viz::Color(color[0], color[1], color[2]));
+            cv::viz::WCube voxel(cv::Point3f(voxel_center[0] - voxel_size_ / 2.0f, voxel_center[1] - voxel_size_ / 2.0f, voxel_center[2] - voxel_size_ / 2.0f),
+                cv::Point3f(voxel_center[0] + voxel_size_ / 2.0f, voxel_center[1] + voxel_size_ / 2.0f, voxel_center[2] + voxel_size_ / 2.0f), 
+                true, cv::viz::Color(color[0], color[1], color[2]));
             window_.showWidget("Voxel_" + std::to_string(key.x) + "_" + std::to_string(key.y) + "_" + std::to_string(key.z), voxel);
         }
         window_.spinOnce(1, true);

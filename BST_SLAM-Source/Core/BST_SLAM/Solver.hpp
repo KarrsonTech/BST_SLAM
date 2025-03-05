@@ -5,16 +5,16 @@ namespace BST_SLAM {
     class Solver {
     public:
         std::vector<cv::Point3f> Pts3D;
-        cv::Vec3f SolveISO3( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Mat GlbRPose1,
-                             cv::Mat LeftImg2, cv::Mat RightImg2, cv::Mat GlbRPose2,
-                             cv::Mat K, float Baseline, float RelTPoseMax );
+        cv::Vec3f SolveISO3( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Vec3f rvec1,
+                             cv::Mat LeftImg2, cv::Mat RightImg2, cv::Vec3f rvec2,
+                             cv::Mat K, float Baseline, float RelTPoseMin, float RelTPoseMax );
 
     private:
         float Resolution = 250;
         cv::Ptr<cv::ORB> ORB = cv::ORB::create(500, 1.65);
         cv::Ptr<cv::BFMatcher> BFMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
-        void ResizeAndAdjustK(cv::Mat& Img, cv::Mat& K, cv::Size& Size, const bool& SetK)
+        void ResizeAndAdjustK(cv::Mat& Img, cv::Mat& K, cv::Size& Size,  bool SetK)
         {
             cv::resize(Img, Img, cv::Size(Resolution, Resolution), 0, 0, cv::INTER_AREA);
 
@@ -50,8 +50,8 @@ namespace BST_SLAM {
             cv::warpPerspective(RightImg1, RightImg1, RelRPoseK, RightImg1.size());
         }
 
-        bool ComputePointCloud(const cv::Mat& LeftImg, const cv::Mat& RightImg,
-            const cv::Mat& K, float Baseline, cv::Mat& PC3D)
+        bool ComputePointCloud( cv::Mat& LeftImg,  cv::Mat& RightImg,
+             cv::Mat& K, float Baseline, cv::Mat& PC3D)
         {
             std::vector<cv::KeyPoint> KpsL, KpsR;
             cv::Mat DesL, DesR;
@@ -67,7 +67,7 @@ namespace BST_SLAM {
 
             std::vector<cv::Point2f> PtsL, PtsR;
 
-            for (const auto& M : Matches)
+            for ( auto& M : Matches)
             {
                 PtsL.push_back(KpsL[M.queryIdx].pt);
                 PtsR.push_back(KpsR[M.trainIdx].pt);
@@ -99,7 +99,7 @@ namespace BST_SLAM {
             return PC3D.total() >= 15;
         }
 
-        cv::Vec3f ComputeRelativePose(const cv::Mat& PC3D, const cv::Mat& K, const cv::Mat& RelTPoseK)
+        cv::Vec3f ComputeRelativePose( cv::Mat& PC3D,  cv::Mat& K,  cv::Mat& RelTPoseK)
         {
             std::vector<cv::Point2f> Pts2DEye, Pts2DDiff;
             std::vector<cv::Point3f> PC3DEye(PC3D), PC3DDiff(PC3D);
@@ -123,10 +123,11 @@ namespace BST_SLAM {
             cv::Vec3f RelTPoseDiff;
             cv::solvePnP(PC3D, Pts2DDiff, K, cv::Mat(), _, RelTPoseDiff, true, cv::SOLVEPNP_ITERATIVE);
 
-            return RelTPoseDiff - RelTPoseEye;
+            cv::Vec3f tvec = RelTPoseEye - RelTPoseDiff;
+            return tvec;
         }
 
-        bool ExtractKeyPoints(const cv::Mat& Img1, const cv::Mat& Img2,
+        bool ExtractKeyPoints( cv::Mat& Img1,  cv::Mat& Img2,
             std::vector<cv::Point2f>& Pts1, std::vector<cv::Point2f>& Pts2)
         {
             std::vector<cv::KeyPoint> Kps1, Kps2;
@@ -142,7 +143,7 @@ namespace BST_SLAM {
 
             if (Matches.size() < 15) return false;
 
-            for (const auto& Match : Matches)
+            for ( auto& Match : Matches)
             {
                 Pts1.push_back(Kps1[Match.queryIdx].pt);
                 Pts2.push_back(Kps2[Match.trainIdx].pt);
@@ -151,7 +152,7 @@ namespace BST_SLAM {
             return Pts1.size() >= 15 && Pts2.size() >= 15;
         }
 
-        template <typename PtType> void RemoveOutliers(std::vector<PtType>& Pts1, std::vector<PtType>& Pts2, const cv::Mat& InlierMask)
+        template <typename PtType> void RemoveOutliers(std::vector<PtType>& Pts1, std::vector<PtType>& Pts2,  cv::Mat& InlierMask)
         {
             for (int i = InlierMask.total() - 1; i >= 0; i--)
             {
@@ -164,10 +165,16 @@ namespace BST_SLAM {
         }
     };
 
-    cv::Vec3f Solver::SolveISO3( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Mat GlbRPose1,
-                                 cv::Mat LeftImg2, cv::Mat RightImg2, cv::Mat GlbRPose2,
-                                 cv::Mat K, float Baseline, float RelTPoseMax )
+    cv::Vec3f Solver::SolveISO3( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Vec3f rvec1,
+                                 cv::Mat LeftImg2, cv::Mat RightImg2, cv::Vec3f rvec2,
+                                 cv::Mat K, float Baseline, float RelTPoseMin, float RelTPoseMax )
     {
+        cv::Mat GlbRPose1;
+        cv::Rodrigues(rvec1, GlbRPose1);
+
+        cv::Mat GlbRPose2;
+        cv::Rodrigues(rvec2, GlbRPose2);
+
         LeftImg1 = LeftImg1.clone();
         RightImg1 = RightImg1.clone();
         LeftImg2 = LeftImg2.clone();
@@ -206,13 +213,12 @@ namespace BST_SLAM {
 
         cv::Vec3f RelTPose = ComputeRelativePose(PC3D, K, RelTPoseK);
 
-        if (cv::norm(RelTPose) > RelTPoseMax)
+        if (cv::norm(RelTPose) < RelTPoseMin || cv::norm(RelTPose) > RelTPoseMax)
             return cv::Vec3f();
 
         RelTPose = (cv::Vec3f)(cv::Mat)(GlbRPose2 * -RelTPose);
 
-        RelTPose = cv::Vec3f(RelTPose[0], -RelTPose[1], RelTPose[2]);
-
-        return RelTPose;
+        cv::Vec3f tvec = RelTPose;
+        return tvec;
     }
 }

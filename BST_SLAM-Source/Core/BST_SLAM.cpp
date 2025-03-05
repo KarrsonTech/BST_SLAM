@@ -1,41 +1,37 @@
 #include "../User/SensorDriver.hpp"
+
 #include "BST_SLAM/Solver.hpp"
 #include "BST_SLAM/Messaging.hpp"
-#include <opencv2/ximgproc.hpp>
-#include <opencv2/viz/viz3d.hpp>
-#include <unordered_map>
-#include <cmath>
-#include <iostream>
 
-float RelTPoseMin = 0.00015;
-float RelTPoseMax = 0.1f;
-float Smoother = 0.98;
-float NodeDist = 0.02f;
-float MapMix = 0.02f;
-int MapMax = 500;
-int MapMax3D = 25000;
+float MinRel = 1e-7;
+float MaxRel = 0.10;
+float PtDist = 0.03;
+float MapMix = 0.03;
+float MapMax = 400;
 
-SensorDriver* Sensor = new SensorDriver();
-
-cv::Vec4f qvec;
-cv::Vec3f rvec;
-cv::Vec3f tvec;
-BST_SLAM::Solver* Solver = new BST_SLAM::Solver();
-cv::Vec3f CamPos;
-cv::Vec4f CamRot;
-
-struct MapNode {
+struct MapNode 
+{
     cv::Mat Left;
     cv::Mat Right;
     cv::Vec3f rvec;
     cv::Vec3f tvec;
 };
 
+SensorDriver* Sensor = new SensorDriver();
+cv::Vec3f CamPos;
+cv::Vec4f CamRot;
+
+BST_SLAM::Solver* Solver = new BST_SLAM::Solver();
 std::vector<MapNode> MapNodes;
+cv::Vec4f qvec;
+cv::Vec3f rvec;
+cv::Vec3f tvec;
 int MapIdx = -1;
 
-int main() {
-    while (true) {
+int main() 
+{
+    while (true) 
+    {
         auto InputData = Sensor->GetInputData();
         InputData.Rot.convertTo(InputData.Rot, CV_32F);
         cv::Size sz = InputData.Left.size();
@@ -57,9 +53,14 @@ int main() {
         qvec = cv::Quatf::createFromRotMat(InputData.Rot.inv()).toVec();
         qvec = cv::Vec4f(qvec[1], qvec[2], qvec[3], qvec[0]);
         rvec = rvec2;
-        tvec += Solver->SolveISO3(PrevLeft, PrevRight, rvec1, InputData.Left, InputData.Right, rvec2, K, InputData.Baseline, RelTPoseMin, RelTPoseMax);
+        tvec += Solver->SolveRelative
+        (
+            PrevLeft, PrevRight, rvec1, 
+            InputData.Left, InputData.Right, rvec2, 
+            K, InputData.Baseline, MinRel, MaxRel
+        );
 
-        if (MapNodes.empty() || cv::norm(MapNodes.back().tvec - tvec) >= NodeDist) 
+        if (MapNodes.empty() || cv::norm(MapNodes.back().tvec - tvec) >= PtDist) 
         {
             MapNode Node;
             Node.Left = InputData.Left.clone();
@@ -74,11 +75,16 @@ int main() {
         {
             MapIdx = (MapIdx + 1) % MapNodes.size();
             MapNode& Node = MapNodes[MapIdx];
-            cv::Vec3f Offset = Solver->SolveISO3(Node.Left, Node.Right, Node.rvec, InputData.Left, InputData.Right, rvec, K, InputData.Baseline, RelTPoseMin, RelTPoseMax);
+            cv::Vec3f Offset = Solver->SolveRelative
+            (
+                Node.Left, Node.Right, Node.rvec, 
+                InputData.Left, InputData.Right, rvec, 
+                K, InputData.Baseline, MinRel, MaxRel
+            );
             if (cv::norm(Offset) > 0) tvec += (Node.tvec + Offset - tvec) * MapMix;
         }
 
-        CamPos += (cv::Vec3f(-tvec[0], tvec[1], -tvec[2]) - CamPos) * Smoother;
+        CamPos = cv::Vec3f(-tvec[0], tvec[1], -tvec[2]);
         CamRot = cv::Vec4f(-qvec[0], qvec[1], -qvec[2], -qvec[3]);
 
         BST_SLAM::SendMessage(CamPos, CamRot);

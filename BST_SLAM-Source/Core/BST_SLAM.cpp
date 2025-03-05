@@ -28,7 +28,7 @@ std::vector<MapNode> MapNodes;
 int MapIdx = -1;
 
 struct VoxelKey {
-    int x, y, z;
+    float x, y, z;
     bool operator==(const VoxelKey& other) const {
         return x == other.x && y == other.y && z == other.z;
     }
@@ -36,89 +36,80 @@ struct VoxelKey {
 
 struct VoxelHash {
     std::size_t operator()(const VoxelKey& key) const {
-        return std::hash<int>()(key.x) ^ std::hash<int>()(key.y) ^ std::hash<int>()(key.z);
+        return std::hash<float>()(key.x) ^ std::hash<float>()(key.y) ^ std::hash<float>()(key.z);
     }
 };
 
 class OccupancyGrid3D {
 public:
-    OccupancyGrid3D(float voxel_size = 0.05, float max_depth = 5.0)
-        : voxel_size_(voxel_size), max_depth_(max_depth), window_("3D Occupancy Grid") {
+    OccupancyGrid3D(float voxel_size = 0.05)
+        : voxel_size_(voxel_size), window_("3D Occupancy Grid") {
     }
 
-    void update(const cv::Mat& depth_map, const cv::Vec3f& position, const cv::Matx33f& rotation) {
-        for (int u = 0; u < depth_map.rows; ++u) {
-            for (int v = 0; v < depth_map.cols; ++v) {
-                float depth = depth_map.at<float>(u, v);
-                if (depth <= 0 || depth > max_depth_) continue;
-
-                cv::Vec3f local_point = pixelToPoint(u, v, depth);
-                cv::Vec3f world_point = transformPoint(local_point, position, rotation);
-
-                VoxelKey voxel = worldToVoxel(world_point);
-                occupancy_grid_[voxel] += 1.0f;
-                raycast(position, world_point);
-            }
+    void update(std::vector<cv::Point3f> Pts3D, const cv::Vec3f& position, const cv::Matx33f& rotation) {
+        std::vector<cv::Point3f> occupancy_grid;
+        for (const auto& Pt3D : Pts3D)
+        {
+            cv::Vec3f world_point = transformPoint(Pt3D, position, rotation);
+            VoxelKey voxel = worldToVoxel(world_point);
+            occupancy_grid.push_back(cv::Point3f(voxelToWorld(voxel)[0], voxelToWorld(voxel)[1], -voxelToWorld(voxel)[2]));
+        }
+        
+        occupancy_grid_.push_back(cv::viz::WCloud(occupancy_grid, cv::viz::Color::green()));
+        while (occupancy_grid_.size() >= MapMax)
+        {
+            occupancy_grid_.erase(occupancy_grid_.begin());
+            occupancy_grid_c++;
         }
     }
 
-    void visualize() {
-        window_.showWidget("Coordinate System", cv::viz::WCoordinateSystem(0.2));
+void visualize() {
+    window_.showWidget("Coordinate System", cv::viz::WCoordinateSystem(0.2));
 
-        for (const auto& [key, value] : occupancy_grid_) {
-            float occupancy = std::min(1.0f, value / 10.0f);
-            cv::Vec3f color(255 * (1 - occupancy), 255 * occupancy, 0);
-
-            cv::Vec3f voxel_center = voxelToWorld(key);
-            cv::viz::WCube voxel(cv::Point3f(voxel_center[0] - voxel_size_ / 2.0f, voxel_center[1] - voxel_size_ / 2.0f, voxel_center[2] - voxel_size_ / 2.0f),
-                cv::Point3f(voxel_center[0] + voxel_size_ / 2.0f, voxel_center[1] + voxel_size_ / 2.0f, voxel_center[2] + voxel_size_ / 2.0f), 
-                true, cv::viz::Color(color[0], color[1], color[2]));
-            window_.showWidget("Voxel_" + std::to_string(key.x) + "_" + std::to_string(key.y) + "_" + std::to_string(key.z), voxel);
+    if (!occupancy_grid_.empty()) {
+        int idx = occupancy_grid_c;
+        for (const auto& pt : occupancy_grid_)
+        {
+            window_.showWidget(std::to_string(idx), pt);
+            idx++;
         }
-        window_.spinOnce(1, true);
     }
+
+    window_.spinOnce(1, true);
+}
+
 
 private:
     float voxel_size_;
-    float max_depth_;
-    std::unordered_map<VoxelKey, float, VoxelHash> occupancy_grid_;
+    std::vector<cv::viz::WCloud> occupancy_grid_;
     cv::viz::Viz3d window_;
+    int occupancy_grid_c = 0;
 
-    cv::Vec3f pixelToPoint(int u, int v, float depth) {
-        float fx = 500.0f, fy = 500.0f;
-        float cx = 320.0f, cy = 240.0f;
-        float x = (v - cx) * depth / fx;
-        float y = (u - cy) * depth / fy;
-        return cv::Vec3f(x, y, depth);
-    }
-
-    cv::Vec3f transformPoint(const cv::Vec3f& point, const cv::Vec3f& position, const cv::Matx33f& rotation) {
-        return rotation * point + position;
+    cv::Vec3f transformPoint(cv::Vec3f point, cv::Vec3f position, const cv::Matx33f& rotation) {
+        point[2] = std::fabs(point[2]);
+        point = rotation * point;
+        point = position + point;
+        return point;
     }
 
     VoxelKey worldToVoxel(const cv::Vec3f& point) {
-        return { static_cast<int>(std::round(point[0] / voxel_size_)),
-                 static_cast<int>(std::round(point[1] / voxel_size_)),
-                 static_cast<int>(std::round(point[2] / voxel_size_)) };
+        return voxel_size_ > 0 ? VoxelKey
+        { 
+            std::round(point[0] / voxel_size_),
+            std::round(point[1] / voxel_size_),
+            std::round(point[2] / voxel_size_) 
+        } : VoxelKey
+        { 
+            point[0],
+            point[1],
+            point[2] 
+        };
     }
 
     cv::Vec3f voxelToWorld(const VoxelKey& key) {
-        return cv::Vec3f(key.x * voxel_size_, key.y * voxel_size_, key.z * voxel_size_);
-    }
-
-    void raycast(const cv::Vec3f& start, const cv::Vec3f& end) {
-        cv::Vec3f direction = end - start;
-        float distance = cv::norm(direction);
-        if (distance == 0) return;
-
-        direction /= distance;
-        float step_size = voxel_size_ / 2.0f;
-
-        for (float d = 0; d < distance; d += step_size) {
-            cv::Vec3f point = start + direction * d;
-            VoxelKey voxel = worldToVoxel(point);
-            occupancy_grid_[voxel] -= 0.5f;
-        }
+        return voxel_size_ > 0 ?
+            cv::Vec3f(key.x * voxel_size_, key.y * voxel_size_, key.z * voxel_size_) :
+            cv::Vec3f(key.x, key.y, key.z);
     }
 };
 
@@ -165,70 +156,10 @@ int main() {
 
         BST_SLAM::SendMessage(CamPos, CamRot);
 
-        cv::Mat DisparityMap;
-        {
-            cv::Mat LeftImgIn = InputData.Left.clone();
-            cv::Mat RightImgIn = InputData.Right.clone();
-            {
-                cv::Mat LeftImgCopy = LeftImgIn.clone();
-                cv::Mat RightImgCopy = RightImgIn.clone();
-                cv::Ptr<cv::ximgproc::AdaptiveManifoldFilter> AdaptiveManifoldFilter = cv::ximgproc::createAMFilter(3, 0.7);
-                cv::pyrDown(LeftImgIn, LeftImgIn);
-                cv::pyrDown(RightImgIn, RightImgIn);
-                AdaptiveManifoldFilter->filter(LeftImgIn, LeftImgIn);
-                AdaptiveManifoldFilter->filter(RightImgIn, RightImgIn);
-                cv::pyrUp(LeftImgIn, LeftImgIn);
-                cv::pyrUp(RightImgIn, RightImgIn);
-                cv::Mat LeftDisparityMap;
-                cv::Mat RightDisparityMap;
-                cv::Size TempSz = LeftImgIn.size();
-                cv::resize(LeftImgIn, LeftImgIn, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
-                cv::resize(RightImgIn, RightImgIn, cv::Size(256, 256), 0, 0, cv::INTER_AREA);
-                cv::Ptr<cv::StereoSGBM> StereoSGBM = cv::StereoSGBM::create();
-                StereoSGBM->setMode(cv::StereoSGBM::MODE_HH4);
-                StereoSGBM->compute(LeftImgIn, RightImgIn, LeftDisparityMap);
-                StereoSGBM->compute(RightImgIn, LeftImgIn, RightDisparityMap);
-                cv::Ptr<cv::ximgproc::DisparityWLSFilter> DisparityWLSFilter = cv::ximgproc::createDisparityWLSFilter(StereoSGBM);
-                DisparityWLSFilter->setLRCthresh(255);
-                DisparityWLSFilter->setLambda(24480);
-                DisparityWLSFilter->filter(LeftDisparityMap, LeftImgIn, DisparityMap, RightDisparityMap, cv::Rect(), RightImgIn);
-                cv::resize(DisparityMap, DisparityMap, TempSz, 0, 0, cv::INTER_AREA);
-                LeftImgIn = LeftImgCopy.clone();
-                RightImgIn = RightImgCopy.clone();
-                int T = DisparityMap.type();
-                DisparityMap.convertTo(DisparityMap, CV_8U);
-                DisparityMap = 255 - DisparityMap;
-                DisparityMap.convertTo(DisparityMap, CV_64F);
-                DisparityMap.convertTo(DisparityMap, T);
-                DisparityMap.convertTo(DisparityMap, CV_64F);
-                DisparityMap = (DisparityMap / 255.0) * (double)LeftImgIn.size().width;
-                DisparityMap.convertTo(DisparityMap, CV_64F);
-                DisparityMap *= 2.0;
-                DisparityMap.convertTo(DisparityMap, T);
-            }
-        }
-
-        cv::Mat DepthMap;
-        {
-            int T = DisparityMap.type();
-            DisparityMap.convertTo(DisparityMap, CV_64F);
-            DepthMap = (double)InputData.Baseline * (double)K.at<float>(0, 0) / DisparityMap;
-            DepthMap.convertTo(DepthMap, CV_64F);
-            DisparityMap.convertTo(DisparityMap, T);
-        }
-
         static OccupancyGrid3D map;
-        DepthMap.convertTo(DepthMap, CV_32F);
 
-        map.update(DepthMap, cv::Vec3f(CamPos[0], -CamPos[1], CamPos[2]), InputData.Rot);
+        if (!Solver->Pts3D.empty()) map.update(Solver->Pts3D, CamPos, cv::Quatf(CamRot[3], CamRot[0], CamRot[1], CamRot[2]).toRotMat3x3());
         map.visualize();
-
-        cv::Mat Vis = DisparityMap.clone();
-        Vis.convertTo(Vis, CV_64F);
-        Vis = (Vis / (double)InputData.Left.size().width) * 255.0;
-        Vis.convertTo(Vis, CV_8U);
-        cv::imshow("Vis", Vis);
-        cv::waitKey(1);
 
         InputData.Left.copyTo(PrevLeft);
         InputData.Right.copyTo(PrevRight);

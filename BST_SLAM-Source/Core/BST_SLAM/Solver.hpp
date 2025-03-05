@@ -4,7 +4,7 @@
 namespace BST_SLAM {
     class Solver {
     public:
-        cv::Mat DisparityMap;
+        std::vector<cv::Point3f> Pts3D;
         cv::Vec3f SolveISO3( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Mat GlbRPose1,
                              cv::Mat LeftImg2, cv::Mat RightImg2, cv::Mat GlbRPose2,
                              cv::Mat K, float Baseline, float RelTPoseMax );
@@ -93,6 +93,8 @@ namespace BST_SLAM {
             if (PC3D.total() < 15) return false;
 
             cv::convertPointsFromHomogeneous(PC3D.t(), PC3D);
+            PC3D.convertTo(PC3D, CV_32F);
+            Pts3D = PC3D;
 
             return PC3D.total() >= 15;
         }

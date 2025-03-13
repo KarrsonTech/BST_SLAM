@@ -33,6 +33,10 @@ add_executable(
    ${SOURCE_LIST}
 )
 
+if (MSVC)
+  set(std-lang-additional /utf-8 /Zc:__cplusplus /Zc:throwingNew /Zc:inline /Zc:externConstexpr /Zc:templateScope /Zc:checkGwOdr /Zc:enumTypes)
+endif()
+
 source_group(
    TREE 
    ${CMAKE_CURRENT_SOURCE_DIR} 

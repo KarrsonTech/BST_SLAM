@@ -6,7 +6,60 @@ namespace BST_SLAM {
     public:
         cv::Vec3f SolveRelative( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Vec3f rvec1,
                                  cv::Mat LeftImg2, cv::Mat RightImg2, cv::Vec3f rvec2,
-                                 cv::Mat K, float Baseline, float Min, float Max );
+                                 cv::Mat K, float Baseline, float Min, float Max )
+        {
+            cv::Mat GlbRPose1;
+            cv::Rodrigues(rvec1, GlbRPose1);
+
+            cv::Mat GlbRPose2;
+            cv::Rodrigues(rvec2, GlbRPose2);
+
+            LeftImg1 = LeftImg1.clone();
+            RightImg1 = RightImg1.clone();
+            LeftImg2 = LeftImg2.clone();
+            RightImg2 = RightImg2.clone();
+            K = K.clone();
+            PrepareImages(LeftImg1, RightImg1, LeftImg2, RightImg2, K, GlbRPose1, GlbRPose2);
+
+            std::vector<cv::Point2f> PtsL1, PtsL2;
+            if (!ExtractKeyPoints(LeftImg1, LeftImg2, PtsL1, PtsL2))
+                return cv::Vec3f();
+
+            cv::Mat InlierMask;
+            cv::Mat H = cv::findHomography(PtsL1, PtsL2, InlierMask, cv::USAC_MAGSAC);
+
+            if (H.empty()) return cv::Vec3f();
+
+            RemoveOutliers(PtsL1, PtsL2, InlierMask);
+
+            if (PtsL1.size() < 15) return cv::Vec3f();
+
+            cv::Mat RelTPoseK = cv::estimateAffinePartial2D(PtsL1, PtsL2);
+
+            if (RelTPoseK.empty()) return cv::Vec3f();
+
+            RelTPoseK.convertTo(RelTPoseK, CV_32F);
+
+            cv::vconcat(RelTPoseK, cv::Vec3f(0, 0, 1).t(), RelTPoseK);
+
+            if (RelTPoseK.empty() || RelTPoseK.rows != 3 || RelTPoseK.cols != 3)
+                return cv::Vec3f();
+
+            cv::Mat PC3D;
+            if (!ComputePointCloud(LeftImg1, RightImg1, K, Baseline, PC3D))
+                return cv::Vec3f();
+            PC3D.convertTo(PC3D, CV_32F);
+
+            cv::Vec3f RelTPose = ComputeRelativePose(PC3D, K, RelTPoseK);
+
+            if (cv::norm(RelTPose) < Min || cv::norm(RelTPose) > Max)
+                return cv::Vec3f();
+
+            RelTPose = (cv::Vec3f)(cv::Mat)(GlbRPose2 * -RelTPose);
+
+            cv::Vec3f tvec = RelTPose;
+            return tvec;
+        }
 
     private:
         float Resolution = 250;
@@ -164,61 +217,5 @@ namespace BST_SLAM {
             }
         }
     };
-
-    cv::Vec3f Solver::SolveRelative( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Vec3f rvec1,
-                                     cv::Mat LeftImg2, cv::Mat RightImg2, cv::Vec3f rvec2,
-                                     cv::Mat K, float Baseline, float Min, float Max )
-    {
-        cv::Mat GlbRPose1;
-        cv::Rodrigues(rvec1, GlbRPose1);
-
-        cv::Mat GlbRPose2;
-        cv::Rodrigues(rvec2, GlbRPose2);
-
-        LeftImg1 = LeftImg1.clone();
-        RightImg1 = RightImg1.clone();
-        LeftImg2 = LeftImg2.clone();
-        RightImg2 = RightImg2.clone();
-        K = K.clone();
-        PrepareImages(LeftImg1, RightImg1, LeftImg2, RightImg2, K, GlbRPose1, GlbRPose2);
-
-        std::vector<cv::Point2f> PtsL1, PtsL2;
-        if (!ExtractKeyPoints(LeftImg1, LeftImg2, PtsL1, PtsL2))
-            return cv::Vec3f();
-
-        cv::Mat InlierMask;
-        cv::Mat H = cv::findHomography(PtsL1, PtsL2, InlierMask, cv::USAC_MAGSAC);
-
-        if (H.empty()) return cv::Vec3f();
-
-        RemoveOutliers(PtsL1, PtsL2, InlierMask);
-
-        if (PtsL1.size() < 15) return cv::Vec3f();
-
-        cv::Mat RelTPoseK = cv::estimateAffinePartial2D(PtsL1, PtsL2);
-
-        if (RelTPoseK.empty()) return cv::Vec3f();
-
-        RelTPoseK.convertTo(RelTPoseK, CV_32F);
-
-        cv::vconcat(RelTPoseK, cv::Vec3f(0, 0, 1).t(), RelTPoseK);
-
-        if (RelTPoseK.empty() || RelTPoseK.rows != 3 || RelTPoseK.cols != 3)
-            return cv::Vec3f();
-
-        cv::Mat PC3D;
-        if (!ComputePointCloud(LeftImg1, RightImg1, K, Baseline, PC3D))
-            return cv::Vec3f();
-        PC3D.convertTo(PC3D, CV_32F);
-
-        cv::Vec3f RelTPose = ComputeRelativePose(PC3D, K, RelTPoseK);
-
-        if (cv::norm(RelTPose) < Min || cv::norm(RelTPose) > Max)
-            return cv::Vec3f();
-
-        RelTPose = (cv::Vec3f)(cv::Mat)(GlbRPose2 * -RelTPose);
-
-        cv::Vec3f tvec = RelTPose;
-        return tvec;
-    }
 }
+

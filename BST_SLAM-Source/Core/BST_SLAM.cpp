@@ -3,12 +3,6 @@
 #include "BST_SLAM/Solver.hpp"
 #include "BST_SLAM/Messaging.hpp"
 
-float MinRel = 1e-7;
-float MaxRel = 0.10;
-float PtDist = 0.03;
-float MapMix = 0.03;
-float MapMax = 400;
-
 struct MapNode 
 {
     cv::Mat Left;
@@ -17,22 +11,40 @@ struct MapNode
     cv::Vec3f tvec;
 };
 
-SensorDriver* Sensor = new SensorDriver();
-cv::Vec3f CamPos;
-cv::Vec4f CamRot;
-
-BST_SLAM::Solver* Solver = new BST_SLAM::Solver();
-std::vector<MapNode> MapNodes;
-cv::Vec4f qvec;
-cv::Vec3f rvec;
-cv::Vec3f tvec;
-int MapIdx = -1;
-
 int main() 
 {
-    while (true) 
+    float MinRel = 1e-7;
+    float MaxRel = 0.10;
+    float PtDist = 0.03;
+    float MapMix = 0.03;
+    float MapMax = 400;
+
+    SensorDriver* Sensor = nullptr;
+    std::string ConnectFailed = "Failed to connect to sensor... e.what(): ";
+    try { Sensor = new SensorDriver(); }
+    catch (const std::exception& e) { std::cout << ConnectFailed << e.what() << std::endl; while (true) { ; } }
+    cv::Vec3f CamPos;
+    cv::Vec4f CamRot;
+
+    BST_SLAM::Solver* Solver = new BST_SLAM::Solver();
+    std::vector<MapNode> MapNodes;
+    cv::Vec4f qvec;
+    cv::Vec3f rvec;
+    cv::Vec3f tvec;
+    int MapIdx = -1;
+
+    while (true)
     {
-        auto InputData = Sensor->GetInputData();
+        SensorDriver::InputData InputData = SensorDriver::InputData();
+        try { InputData = Sensor->GetInputData(); }
+        catch (const std::exception& e) { std::cout << ConnectFailed << e.what() << std::endl; while (true) { ; } }
+        if (InputData.Left.empty() || InputData.Right.empty() || InputData.Rot.empty() ||
+            InputData.Rot.rows != 3 || InputData.Rot.cols != 3 ||
+            InputData.Left.rows != InputData.Right.rows ||
+            InputData.Left.cols != InputData.Right.cols) continue;
+        #ifndef NDEBUG
+        std::cout << ConnectFailed << "Feature only available in release mode" << std::endl; while (true) { ; }
+        #endif
         InputData.Rot.convertTo(InputData.Rot, CV_32F);
         cv::Size sz = InputData.Left.size();
 
@@ -73,7 +85,8 @@ int main()
 
         if (!MapNodes.empty())
         {
-            MapIdx = (MapIdx + 1) % MapNodes.size();
+            if (MapIdx < MapNodes.size() - 1) MapIdx++;
+            else MapIdx = 0;
             MapNode& Node = MapNodes[MapIdx];
             cv::Vec3f Offset = Solver->SolveRelative
             (

@@ -6,7 +6,13 @@
 
 class SensorDriver {
 public:
-    SensorDriver() : Pipeline(), Device(), Calibration(), fx(0), fy(0), Baseline(0) {
+    SensorDriver() {
+        if (dai::Device::getAllAvailableDevices().size() <= 0) throw std::runtime_error("Couldn't find any available devices.");
+        Pipeline = dai::Pipeline();
+        Calibration = dai::CalibrationHandler();
+        fx = 0;
+        fy = 0;
+        Baseline = 0; 
         InitializePipeline();
         InitializeDevice();
     }
@@ -37,7 +43,6 @@ public:
     }
 
 private:
-    std::shared_ptr<dai::Device> Device;
     dai::Pipeline Pipeline;
     dai::CalibrationHandler Calibration;
 
@@ -50,7 +55,7 @@ private:
     float Baseline;
 
     void InitializeDevice() {
-        Device = std::make_shared<dai::Device>(Pipeline, dai::UsbSpeed::SUPER_PLUS);
+        static auto Device = new dai::Device(Pipeline, dai::UsbSpeed::SUPER_PLUS);
 
         Calibration = Device->readCalibration();
         auto intrinsics = Calibration.getCameraIntrinsics(

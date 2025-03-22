@@ -40,8 +40,8 @@ namespace BST_SLAM {
         }
 
     private:
-        double Resolution = 250;
-        cv::Ptr<cv::ORB> ORB = cv::ORB::create(500, 1.65);
+        double Resolution = 300;
+        cv::Ptr<cv::ORB> ORB = cv::ORB::create(500);
         cv::Ptr<cv::BFMatcher> BFMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
         void ResizeAndAdjustK( cv::Mat& Img, cv::Mat& K, cv::Size& Size,  bool SetK )
@@ -133,8 +133,8 @@ namespace BST_SLAM {
             std::vector<cv::Point2d> Pts2DEye, Pts2DDiff;
             std::vector<cv::Point3d> PC3DEye(PC3D), PC3DDiff(PC3D);
 
-            for (auto& P : PC3DEye) P.z *= 2.0f;
-            for (auto& P : PC3DDiff) P.z *= 2.0f;
+            for (auto& P : PC3DEye) P.z *= 1.666f;
+            for (auto& P : PC3DDiff) P.z *= 1.666f;
 
             cv::projectPoints(PC3DEye, cv::Vec3d(), cv::Vec3d(), K, cv::noArray(), Pts2DEye);
 

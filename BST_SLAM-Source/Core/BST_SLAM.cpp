@@ -3,19 +3,26 @@
 #include "BST_SLAM/Solver.hpp"
 #include "BST_SLAM/Messaging.hpp"
 
-struct MapNode 
-{
-    cv::Mat Left;
-    cv::Mat Right;
-    cv::Vec3d rvec;
-    cv::Vec3d tvec;
-};
+void prediction_update(cv::Mat& mu, cv::Mat& sigma, cv::Mat& u, int& n_state, cv::Mat& Fx) {
+    double rx = mu.at<double>(0);
+    double ry = mu.at<double>(1);
+    double rz = mu.at<double>(2);
+    
+    double vw_x = u.at<double>(0);
+    double vw_y = u.at<double>(1);
+    double vw_z = u.at<double>(2);
+
+    cv::Mat state_model_mat = cv::Mat::zeros(n_state, 1, CV_64F);
+    state_model_mat.at<double>(0) = vw_x;
+    state_model_mat.at<double>(1) = vw_y;
+    state_model_mat.at<double>(2) = vw_z;
+
+    mu += Fx.t() * state_model_mat;
+}
 
 int main() 
 {    
-    double RelMag = 0.025;
     double RelMax = 0.1;
-    double MapMax = 500;
 
     SensorDriver* Sensor = nullptr;
     std::string ConnectFailed = "Failed to connect to sensor... e.what(): ";
@@ -25,11 +32,9 @@ int main()
     cv::Vec4d CamRot;
 
     BST_SLAM::Solver* Solver = new BST_SLAM::Solver();
-    std::vector<MapNode> MapNodes;
     cv::Vec4d qvec;
     cv::Vec3d rvec;
     cv::Vec3d tvec;
-    int MapIdx = -1;
 
     while (true)
     {
@@ -70,38 +75,22 @@ int main()
             InputData.Left, InputData.Right, rvec2,
             K, InputData.Baseline, RelMax
         );
-        if (cv::norm(TRel) > 0) tvec += TRel;
-
-        if (MapNodes.empty() || cv::norm(MapNodes.back().tvec - tvec) >= RelMag) 
-        {
-            MapNode Node;
-            Node.Left = InputData.Left.clone();
-            Node.Right = InputData.Right.clone();
-            Node.tvec = tvec;
-            Node.rvec = rvec;
-            MapNodes.push_back(Node);
-            if (MapNodes.size() >= MapMax) MapNodes.erase(MapNodes.begin());
+        static int n_state = 3;
+        static int n_landmarks = 1;
+        static cv::Mat mu = cv::Mat::zeros(n_state + n_state * n_landmarks, 1, CV_64F);
+        static cv::Mat sigma = cv::Mat::zeros(n_state + n_state * n_landmarks, n_state + n_state * n_landmarks, CV_64F);
+        static cv::Mat Fx;
+        static bool init_ekf = true;
+        if (init_ekf) {
+            Fx = cv::Mat::eye(3, 3, CV_64F);
+            cv::hconcat(Fx, cv::Mat::zeros(3, n_state * n_landmarks, CV_64F), Fx);
         }
-
-        if (!MapNodes.empty())
-        {
-            if (MapIdx < MapNodes.size() - 1) MapIdx++;
-            else MapIdx = 0;
-            MapNode& Node = MapNodes[MapIdx];
-            WasSuccessful = false;
-            cv::Vec3d Offset = Solver->SolveRelative
-            (
-                Node.Left, Node.Right, Node.rvec,
-                InputData.Left, InputData.Right, rvec,
-                K, InputData.Baseline, RelMax
-            );
-            if (cv::norm(Offset) > 0)
-            {
-                cv::Vec3d Src = tvec;
-                cv::Vec3d Dst = Node.tvec + Offset;
-                tvec += (cv::normalize(Dst - Src) * 1e-6) * ((30.0 * MapMax) / 100.0);
-            }
-        }
+        cv::Mat u = cv::Mat::zeros(n_state, 1, CV_64F);
+        u.at<double>(0) = TRel[0];
+        u.at<double>(1) = TRel[1];
+        u.at<double>(2) = TRel[2];
+        prediction_update(mu, sigma, u, n_state, Fx);
+        tvec = cv::Vec3d(mu.at<double>(0), mu.at<double>(1), mu.at<double>(2));
 
         CamPos = cv::Vec3d(-tvec[0], tvec[1], -tvec[2]);
         CamRot = cv::Vec4d(-qvec[0], qvec[1], -qvec[2], -qvec[3]);

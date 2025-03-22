@@ -2,41 +2,23 @@
 
 #include "BST_SLAM/Solver.hpp"
 #include "BST_SLAM/Messaging.hpp"
+#include <opencv2/video/tracking.hpp>
 
-void prediction_update(cv::Mat& mu, cv::Mat& sigma, cv::Mat& u, int& n_state, cv::Mat& Fx, cv::Mat& R) {
-    double rx = mu.at<double>(0);
-    double ry = mu.at<double>(1);
-    double rz = mu.at<double>(2);
-    
-    double vw_x = u.at<double>(0);
-    double vw_y = u.at<double>(1);
-    double vw_z = u.at<double>(2);
-
-    cv::Mat state_model_mat = cv::Mat::zeros(n_state, 1, CV_64F);
-    state_model_mat.at<double>(0) = vw_x;
-    state_model_mat.at<double>(1) = vw_y;
-    state_model_mat.at<double>(2) = vw_z;
-    mu += Fx.t() * state_model_mat;
-
-    cv::Mat state_jacobian_mat = cv::Mat::zeros(n_state, n_state, CV_64F);
-    state_jacobian_mat.at<double>(0, 2) = vw_x;
-    state_jacobian_mat.at<double>(1, 2) = vw_y;
-    state_jacobian_mat.at<double>(2, 2) = vw_z;
-
-    cv::Mat G = cv::Mat::eye(sigma.rows, sigma.rows, CV_64F) + Fx.t() * state_jacobian_mat * Fx;
-    sigma = G * sigma * G.t() + Fx.t() * R * Fx;
-}
-
-void sigma2transform(cv::Mat& sigma_sub, cv::Mat& eigenvals, double& angle, int XIdx=0, int YIdx=2) {
-    cv::Mat eigenvecs;
-    cv::eigen(sigma_sub, eigenvals, eigenvecs);
-    eigenvecs.convertTo(eigenvecs, CV_64F);
-    angle = 180.0 * std::atan2(eigenvecs.at<double>(YIdx, 0), eigenvecs.at<double>(XIdx, 0)) / CV_PI;
-}
+struct MapNode 
+{
+    cv::Mat Left;
+    cv::Mat Right;
+    cv::Vec3d rvec;
+    cv::Vec3d tvec;
+};
 
 int main() 
 {    
     double RelMax = 0.1;
+    double RelMix = 0.9;
+    double MapMax = 15;
+    double MapMix1 = 0.5;
+    double MapMix2 = 0.02;
 
     SensorDriver* Sensor = nullptr;
     std::string ConnectFailed = "Failed to connect to sensor... e.what(): ";
@@ -46,12 +28,50 @@ int main()
     cv::Vec4d CamRot;
 
     BST_SLAM::Solver* Solver = new BST_SLAM::Solver();
+    std::vector<MapNode> MapNodes;
     cv::Vec4d qvec;
     cv::Vec3d rvec;
-    cv::Vec3d tvec;
-
+    cv::Vec3d tvec1 = cv::Vec3d(0, 0, 0); 
+    int MapIdx = -1;
+    int stateSize = 6;    
+    int measSize = 3;     
+    int contrSize = 3;    
+    cv::KalmanFilter KF(stateSize, measSize, contrSize, CV_64F);
+    cv::Mat state(stateSize, 1, CV_64F);  
+    cv::Mat meas(measSize, 1, CV_64F);    
+    cv::Mat control(contrSize, 1, CV_64F); 
+    cv::setIdentity(KF.transitionMatrix);
+    KF.measurementMatrix = cv::Mat::zeros(measSize, stateSize, CV_64F);
+    KF.measurementMatrix.at<double>(0,0) = 1.0;
+    KF.measurementMatrix.at<double>(1,1) = 1.0;
+    KF.measurementMatrix.at<double>(2,2) = 1.0;
+    KF.controlMatrix = cv::Mat::zeros(stateSize, contrSize, CV_64F);
+    KF.controlMatrix.at<double>(3,0) = 1.0;
+    KF.controlMatrix.at<double>(4,1) = 1.0;
+    KF.controlMatrix.at<double>(5,2) = 1.0;
+    cv::setIdentity(KF.processNoiseCov, cv::Scalar((1.0 - MapMix1) / 100000000.0));
+    KF.processNoiseCov.at<double>(3,3) = (1.0 - MapMix1) / 10000000.0; 
+    KF.processNoiseCov.at<double>(4,4) = (1.0 - MapMix1) / 10000000.0; 
+    KF.processNoiseCov.at<double>(5,5) = (1.0 - MapMix1) / 10000000.0; 
+    cv::setIdentity(KF.measurementNoiseCov, cv::Scalar((1.0 - MapMix1) / 10000000.0));
+    cv::setIdentity(KF.errorCovPost, cv::Scalar((1.0 - MapMix1) / 100000.0));
+    double ticks = (double)cv::getTickCount();
     while (true)
     {
+        double prevTick = ticks;
+        ticks = (double)cv::getTickCount();
+        double dt = (ticks - prevTick) / cv::getTickFrequency();
+        double FpsMax = 120.0;
+        double FpsMax2 = FpsMax * 2.0;
+        while (dt <= 1.0 / FpsMax)
+        {
+            ticks = (double)cv::getTickCount();
+            dt = (ticks - prevTick) / cv::getTickFrequency();
+        }
+        double Fps = 1.0 / dt;
+        KF.transitionMatrix.at<double>(0,3) = Fps;
+        KF.transitionMatrix.at<double>(1,4) = Fps;
+        KF.transitionMatrix.at<double>(2,5) = Fps;
         SensorDriver::InputData InputData = SensorDriver::InputData();
         try { InputData = Sensor->GetInputData(); }
         catch (const std::exception& e) { std::cout << ConnectFailed << e.what() << std::endl; while (true) { ; } }
@@ -64,11 +84,9 @@ int main()
 #endif
         InputData.Rot.convertTo(InputData.Rot, CV_64F);
         cv::Size sz = InputData.Left.size();
-
         static cv::Mat PrevLeft = InputData.Left.clone();
         static cv::Mat PrevRight = InputData.Right.clone();
         static cv::Mat PrevRot = InputData.Rot.clone();
-
         cv::Mat K = cv::Mat::eye(3, 3, CV_64F);
         K.at<double>(0, 0) = InputData.fx;
         K.at<double>(1, 1) = InputData.fy;
@@ -82,38 +100,63 @@ int main()
         qvec = cv::Quatd::createFromRotMat(InputData.Rot.inv()).toVec();
         qvec = cv::Vec4d(qvec[1], qvec[2], qvec[3], qvec[0]);
         rvec = rvec2;
-        bool WasSuccessful = false;
-        cv::Vec3d TRel = Solver->SolveRelative
-        (
+        cv::Vec3d TRel = dt > 0 ? Solver->SolveRelative(
             PrevLeft, PrevRight, rvec1,
             InputData.Left, InputData.Right, rvec2,
-            K, InputData.Baseline, RelMax
-        );
-        static int n_state = 3;
-        static int n_landmarks = 1;
-        static cv::Mat mu = cv::Mat::zeros(n_state + n_state * n_landmarks, 1, CV_64F);
-        static cv::Mat sigma = cv::Mat::zeros(n_state + n_state * n_landmarks, n_state + n_state * n_landmarks, CV_64F);
-        static cv::Mat Fx;
-        static double ErrLo = 0.005;
-        static double ErrHi = 0.025;
-        static cv::Mat R = cv::Mat::eye(n_state, n_state, CV_64F) * ErrLo;
-        static bool init_ekf = true;
-        if (init_ekf) {
-            Fx = cv::Mat::eye(3, 3, CV_64F);
-            cv::hconcat(Fx, cv::Mat::zeros(3, n_state * n_landmarks, CV_64F), Fx);
-            sigma = cv::Mat::eye(sigma.rows, sigma.cols, CV_64F) * 300.0;
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    sigma.at<double>(i, j) = ErrHi;
+            K, InputData.Baseline, RelMax, RelMix
+        ) / dt : cv::Vec3d();
+        control.at<double>(0) = TRel[0];
+        control.at<double>(1) = TRel[1];
+        control.at<double>(2) = TRel[2];
+        state = KF.predict(control);
+        static cv::Vec3d measurement = tvec1;
+        measurement += TRel * dt;
+        static cv::Vec3d tvec;
+        if (MapNodes.empty() || cv::norm(MapNodes.back().tvec - measurement) >= RelMax / 2.5) 
+        {
+            MapNode Node;
+            Node.Left = InputData.Left.clone();
+            Node.Right = InputData.Right.clone();
+            Node.tvec = measurement;
+            Node.rvec = rvec;
+            bool AddIt = true;
+            for (int i = MapNodes.size() - 1; i >= 0; i--)
+            {
+                const auto& MapNode = MapNodes[i];
+                if (cv::norm(MapNode.tvec - measurement) <= RelMax / 2.5) {
+                    AddIt = false;
+                    break;
                 }
             }
+            if (AddIt)
+            {
+                MapNodes.push_back(Node);
+                if (MapNodes.size() >= MapMax) MapNodes.erase(MapNodes.begin());
+            }
         }
-        cv::Mat u = cv::Mat::zeros(n_state, 1, CV_64F);
-        u.at<double>(0) = TRel[0];
-        u.at<double>(1) = TRel[1];
-        u.at<double>(2) = TRel[2];
-        prediction_update(mu, sigma, u, n_state, Fx, R);
-        tvec = cv::Vec3d(mu.at<double>(0), mu.at<double>(1), mu.at<double>(2));
+        if (!MapNodes.empty())
+        {
+            if (MapIdx < MapNodes.size() - 1) MapIdx++;
+            else MapIdx = 0;
+            MapNode& Node = MapNodes[MapIdx];
+            cv::Vec3d Offset = Solver->SolveRelative(
+                Node.Left, Node.Right, Node.rvec,
+                InputData.Left, InputData.Right, rvec,
+                K, InputData.Baseline, RelMax, RelMix
+            );
+            if (cv::norm(Offset) > 0) measurement += ((Node.tvec + Offset) - measurement) * MapMix2;
+        }
+        meas.at<double>(0) = measurement[0];
+        meas.at<double>(1) = measurement[1];
+        meas.at<double>(2) = measurement[2];
+        state = KF.correct(meas);
+        tvec1[0] = state.at<double>(0);
+        tvec1[1] = state.at<double>(1);
+        tvec1[2] = state.at<double>(2);
+        static cv::Vec3d tvec2;
+        tvec2 += TRel * dt;
+        tvec2 += (tvec1 - tvec2) * (MapMix1 * (1.0 - Fps / FpsMax2));
+        tvec += (tvec2 - tvec) * (RelMix * (1.0 - Fps / FpsMax2));
 
         CamPos = cv::Vec3d(-tvec[0], tvec[1], -tvec[2]);
         CamRot = cv::Vec4d(-qvec[0], qvec[1], -qvec[2], -qvec[3]);

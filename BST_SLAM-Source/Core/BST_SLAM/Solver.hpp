@@ -6,7 +6,7 @@ namespace BST_SLAM {
     public:
         cv::Vec3d SolveRelative( cv::Mat LeftImg1, cv::Mat RightImg1, cv::Vec3d rvec1,
                                  cv::Mat LeftImg2, cv::Mat RightImg2, cv::Vec3d rvec2,
-                                 cv::Mat K, double Baseline, double Max ) {
+                                 cv::Mat K, double Baseline, double RelMax, double RelMix ) {
             cv::Mat GlbRPose1;
             cv::Rodrigues(rvec1, GlbRPose1);
             cv::Mat GlbRPose2;
@@ -33,15 +33,15 @@ namespace BST_SLAM {
             cv::Mat Pts3D;
             if (!ComputePointCloud(LeftImg1, RightImg1, K, Baseline, Pts3D)) return cv::Vec3d();
             Pts3D.convertTo(Pts3D, CV_64F);
-            cv::Vec3d RelTPose = SolveRelative(Pts3D, K, H);
-            if (cv::norm(RelTPose) > Max) return cv::Vec3d();
+            cv::Vec3d RelTPose = SolveRelative(Pts3D, K, H, RelMix);
+            if (cv::norm(RelTPose) > RelMax) return cv::Vec3d();
             RelTPose = (cv::Mat)(GlbRPose1 * -RelTPose);
             return RelTPose;
         }
 
     private:
-        double Resolution = 300;
-        cv::Ptr<cv::ORB> ORB = cv::ORB::create(500);
+        double Resolution = 250;
+        cv::Ptr<cv::ORB> ORB = cv::ORB::create(500, 1.65);
         cv::Ptr<cv::BFMatcher> BFMatcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
         void ResizeAndAdjustK( cv::Mat& Img, cv::Mat& K, cv::Size& Size,  bool SetK )
@@ -128,13 +128,13 @@ namespace BST_SLAM {
             return PC3D.total() >= 15;
         }
 
-        cv::Vec3d SolveRelative( cv::Mat& PC3D,  cv::Mat& K,  cv::Mat& RelTPoseK )
+        cv::Vec3d SolveRelative( cv::Mat& PC3D,  cv::Mat& K,  cv::Mat& RelTPoseK, double RelMix )
         {
             std::vector<cv::Point2d> Pts2DEye, Pts2DDiff;
             std::vector<cv::Point3d> PC3DEye(PC3D), PC3DDiff(PC3D);
 
-            for (auto& P : PC3DEye) P.z *= 1.666f;
-            for (auto& P : PC3DDiff) P.z *= 1.666f;
+            for (auto& P : PC3DEye) P.z *= 1.0 + RelMix;
+            for (auto& P : PC3DDiff) P.z *= 1.0 + RelMix;
 
             cv::projectPoints(PC3DEye, cv::Vec3d(), cv::Vec3d(), K, cv::noArray(), Pts2DEye);
 

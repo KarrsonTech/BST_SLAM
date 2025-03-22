@@ -3,7 +3,7 @@
 #include "BST_SLAM/Solver.hpp"
 #include "BST_SLAM/Messaging.hpp"
 
-void prediction_update(cv::Mat& mu, cv::Mat& sigma, cv::Mat& u, int& n_state, cv::Mat& Fx) {
+void prediction_update(cv::Mat& mu, cv::Mat& sigma, cv::Mat& u, int& n_state, cv::Mat& Fx, cv::Mat& R) {
     double rx = mu.at<double>(0);
     double ry = mu.at<double>(1);
     double rz = mu.at<double>(2);
@@ -16,8 +16,22 @@ void prediction_update(cv::Mat& mu, cv::Mat& sigma, cv::Mat& u, int& n_state, cv
     state_model_mat.at<double>(0) = vw_x;
     state_model_mat.at<double>(1) = vw_y;
     state_model_mat.at<double>(2) = vw_z;
-
     mu += Fx.t() * state_model_mat;
+
+    cv::Mat state_jacobian_mat = cv::Mat::zeros(n_state, n_state, CV_64F);
+    state_jacobian_mat.at<double>(0, 2) = vw_x;
+    state_jacobian_mat.at<double>(1, 2) = vw_y;
+    state_jacobian_mat.at<double>(2, 2) = vw_z;
+
+    cv::Mat G = cv::Mat::eye(sigma.rows, sigma.rows, CV_64F) + Fx.t() * state_jacobian_mat * Fx;
+    sigma = G * sigma * G.t() + Fx.t() * R * Fx;
+}
+
+void sigma2transform(cv::Mat& sigma_sub, cv::Mat& eigenvals, double& angle, int XIdx=0, int YIdx=2) {
+    cv::Mat eigenvecs;
+    cv::eigen(sigma_sub, eigenvals, eigenvecs);
+    eigenvecs.convertTo(eigenvecs, CV_64F);
+    angle = 180.0 * std::atan2(eigenvecs.at<double>(YIdx, 0), eigenvecs.at<double>(XIdx, 0)) / CV_PI;
 }
 
 int main() 
@@ -80,16 +94,25 @@ int main()
         static cv::Mat mu = cv::Mat::zeros(n_state + n_state * n_landmarks, 1, CV_64F);
         static cv::Mat sigma = cv::Mat::zeros(n_state + n_state * n_landmarks, n_state + n_state * n_landmarks, CV_64F);
         static cv::Mat Fx;
+        static double ErrLo = 0.005;
+        static double ErrHi = 0.025;
+        static cv::Mat R = cv::Mat::eye(n_state, n_state, CV_64F) * ErrLo;
         static bool init_ekf = true;
         if (init_ekf) {
             Fx = cv::Mat::eye(3, 3, CV_64F);
             cv::hconcat(Fx, cv::Mat::zeros(3, n_state * n_landmarks, CV_64F), Fx);
+            sigma = cv::Mat::eye(sigma.rows, sigma.cols, CV_64F) * 300.0;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    sigma.at<double>(i, j) = ErrHi;
+                }
+            }
         }
         cv::Mat u = cv::Mat::zeros(n_state, 1, CV_64F);
         u.at<double>(0) = TRel[0];
         u.at<double>(1) = TRel[1];
         u.at<double>(2) = TRel[2];
-        prediction_update(mu, sigma, u, n_state, Fx);
+        prediction_update(mu, sigma, u, n_state, Fx, R);
         tvec = cv::Vec3d(mu.at<double>(0), mu.at<double>(1), mu.at<double>(2));
 
         CamPos = cv::Vec3d(-tvec[0], tvec[1], -tvec[2]);
